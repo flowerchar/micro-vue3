@@ -1,31 +1,59 @@
 var Vue = (function (exports) {
     'use strict';
 
-    var reactiveEffect = /** @class */ (function () {
-        function reactiveEffect(fn) {
+    var createDep = function (effects) {
+        var dep = new Set(effects);
+        return dep;
+    };
+
+    var activeEffect;
+    var targetMap = new WeakMap();
+    var ReactiveEffect = /** @class */ (function () {
+        function ReactiveEffect(fn) {
             this.fn = fn;
         }
-        reactiveEffect.prototype.run = function () {
+        ReactiveEffect.prototype.run = function () {
+            activeEffect = this;
             return this.fn();
         };
-        return reactiveEffect;
+        return ReactiveEffect;
     }());
     function effect(fn) {
-        var _effect = new reactiveEffect(fn);
+        var _effect = new ReactiveEffect(fn);
         _effect.run();
     }
     function track(target, key) {
-        console.log('开始依赖111222');
+        if (!activeEffect)
+            return;
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            targetMap.set(target, (depsMap = new Map()));
+        }
+        var dep = depsMap.get(key);
+        if (!dep) {
+            depsMap.set(key, (dep = createDep()));
+        }
+        trackEffects(dep);
+    }
+    function trackEffects(dep) {
+        dep.add(activeEffect);
     }
     function trigger(target, key, newValue) {
-        console.log('开始收集');
+        var depsMap = targetMap.get(target);
+        if (!depsMap) {
+            return;
+        }
+        var dep = depsMap.get(key);
+        if (!dep) {
+            return;
+        }
     }
 
     var get = createGetter();
     function createGetter() {
         return function get(target, key, receiver) {
             var res = Reflect.get(target, key, receiver);
-            track();
+            track(target, key);
             return res;
         };
     }
@@ -33,7 +61,7 @@ var Vue = (function (exports) {
     function createSetter() {
         return function set(target, key, value, receiver) {
             var res = Reflect.set(target, key, value, receiver);
-            trigger();
+            trigger(target, key);
             return res;
         };
     }
