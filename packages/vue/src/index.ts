@@ -1,3 +1,1 @@
-const A = () => {
-  console.log('asd')
-}
+export { reactive } from '@vue/reactivity'
