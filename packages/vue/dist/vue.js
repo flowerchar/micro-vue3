@@ -1,8 +1,21 @@
 var Vue = (function (exports) {
     'use strict';
 
+    var reactiveEffect = /** @class */ (function () {
+        function reactiveEffect(fn) {
+            this.fn = fn;
+        }
+        reactiveEffect.prototype.run = function () {
+            return this.fn();
+        };
+        return reactiveEffect;
+    }());
+    function effect(fn) {
+        var _effect = new reactiveEffect(fn);
+        _effect.run();
+    }
     function track(target, key) {
-        console.log('开始依赖');
+        console.log('开始依赖111222');
     }
     function trigger(target, key, newValue) {
         console.log('开始收集');
@@ -43,6 +56,7 @@ var Vue = (function (exports) {
         return proxy;
     }
 
+    exports.effect = effect;
     exports.reactive = reactive;
 
     Object.defineProperty(exports, '__esModule', { value: true });
